@@ -10,6 +10,11 @@
 #include <pico/multicore.h>
 #include <pico/cyw43_arch.h>
 #include "functions.h"
+//Needed for Deadlock tests
+#define MAIN_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#define SIDE_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
+#define SIDE_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 
 #define TEST_RUNNER_PRIORITY ( tskIDLE_PRIORITY + 5UL ) // the base task has the highest priority
 
@@ -97,6 +102,24 @@ void test_side_lock_and_logic(void)
     TEST_ASSERT_EQUAL_INT(result_main_given, pdFALSE);
     TEST_ASSERT_EQUAL_INT(counter, 0); // if it didn't run, it should not have incremented the counter by 1
 
+}
+
+void test_deadlock_2_threads(void)
+{
+//Create semaphores
+SemaphoreHandle_t first = xSemaphoreCreateBinary();
+SemaphoreHandle_t second = xSemaphoreCreateBinary();
+//Give both threads their semaphores so each can run
+xSemaphoreGive(first);
+xSemaphoreGive(second);
+//Run both functions
+//deadlock_2_threads(first, second, 0);
+//deadlock_2_threads(second, first, 0);
+TaskHandle_t first, second;
+struct deadlock_args first_args = {first, second, 0};
+struct deadlock_args second_args = {second, first, 0};
+xTaskCreate(deadlock_2_threads, "FirstThread", MAIN_TASK_STACK_SIZE, (void *)&first_args, MAIN_TASK_PRIORITY, &first);
+xTaskCreate(deadlock_2_threads, "SecondThread", SIDE_TASK_STACK_SIZE, (void *)&second_args, SIDE_TASK_PRIORITY, &second);
 }
 
 void runner_task(__unused void *args)

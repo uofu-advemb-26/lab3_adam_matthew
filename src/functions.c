@@ -32,3 +32,13 @@ void do_side_logic(int *counter, int *on, SemaphoreHandle_t main, SemaphoreHandl
                 xSemaphoreGive(main);
             }
 }
+
+void deadlock_2_threads(SemaphoreHandle_t first, SemaphoreHandle_t second, TickType_t wait_ticks)
+{
+    if (xSemaphoreTake(first, wait_ticks))
+            {
+                vTaskDelay(100);
+                printf("hello world from %s!", "deadlock");
+                xSemaphoreGive(second);
+            }
+}
