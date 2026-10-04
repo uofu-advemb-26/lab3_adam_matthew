@@ -33,12 +33,19 @@ void do_side_logic(int *counter, int *on, SemaphoreHandle_t main, SemaphoreHandl
             }
 }
 
-void deadlock_2_threads(SemaphoreHandle_t first, SemaphoreHandle_t second, TickType_t wait_ticks)
+void deadlock_2_threads(void* vanilla_args)
 {
-    if (xSemaphoreTake(first, wait_ticks))
+    struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
+    if (xSemaphoreTake(args.first, args.wait_ticks))
             {
                 vTaskDelay(100);
                 printf("hello world from %s!", "deadlock");
-                xSemaphoreGive(second);
+                xSemaphoreGive(args.second);
             }
+}
+
+void orphaned_lock(void* vanilla_args)
+{
+struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
+
 }

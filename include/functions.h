@@ -9,4 +9,5 @@ struct deadlock_args {
     SemaphoreHandle_t first,
     SemaphoreHandle_t second,
     TickType_t wait_ticks
+    int counter;
 };
