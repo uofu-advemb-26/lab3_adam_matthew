@@ -49,12 +49,25 @@ void orphaned_lock(void* vanilla_args)
     struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
     args->counter++;
     while (1) {
-        xSemaphoreTake(args->first, args->wait_ticks); //K_FOREVER);
+        xSemaphoreTake(args->first, args->wait_ticks);
         args->counter++;
         if (args->counter % 2) {
             continue;
         }
         printf("Count %d\n", args->counter);
+        xSemaphoreGive(&args->first);
+    }
+}
+void orphaned_lock_fixed(void* vanilla_args)
+{
+    struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
+    args->counter++;
+    while (1) {
+        xSemaphoreTake(args->first, args->wait_ticks);
+        args->counter++;
+        if ((args->counter % 2) == 0) {
+            printf("Count %d\n", args->counter);
+        }
         xSemaphoreGive(&args->first);
     }
 }

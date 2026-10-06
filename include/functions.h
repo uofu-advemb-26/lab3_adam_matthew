@@ -7,6 +7,7 @@ void do_main_logic(int *counter, int *on, SemaphoreHandle_t main, SemaphoreHandl
 void do_side_logic(int *counter, int *on, SemaphoreHandle_t main, SemaphoreHandle_t side, TickType_t wait_ticks);
 void deadlock_2_threads(void* vanilla_args);
 void orphaned_lock(void* vanilla_args);
+void orphaned_lock_fixed(void* vanilla_args);
 struct deadlock_args {
     SemaphoreHandle_t first;
     SemaphoreHandle_t second;
