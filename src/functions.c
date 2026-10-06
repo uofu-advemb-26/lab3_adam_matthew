@@ -36,25 +36,25 @@ void do_side_logic(int *counter, int *on, SemaphoreHandle_t main, SemaphoreHandl
 void deadlock_2_threads(void* vanilla_args)
 {
     struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
-    if (xSemaphoreTake(args.first, args.wait_ticks))
+    if (xSemaphoreTake(args->first, args->wait_ticks))
             {
                 vTaskDelay(100);
                 printf("hello world from %s!", "deadlock");
-                xSemaphoreGive(args.second);
+                xSemaphoreGive(args->second);
             }
 }
 
 void orphaned_lock(void* vanilla_args)
 {
     struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
-    args.counter++;
+    args->counter++;
     while (1) {
-        xSemaphoreTake(args.first, K_FOREVER);
-        args.counter++;
-        if (args.counter % 2) {
+        xSemaphoreTake(args->first, args->wait_ticks); //K_FOREVER);
+        args->counter++;
+        if (args->counter % 2) {
             continue;
         }
-        printk("Count %d\n", args.counter);
-        xSemaphoreGive(&args.first);
+        printf("Count %d\n", args->counter);
+        xSemaphoreGive(&args->first);
     }
 }

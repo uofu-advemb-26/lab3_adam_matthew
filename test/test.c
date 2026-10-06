@@ -118,7 +118,7 @@ void test_deadlock_2_threads(void)
     TaskHandle_t first_t, second_t;
     struct deadlock_args first_args = {first_sem, second_sem, 0};
     struct deadlock_args second_args = {second_sem, first_sem, 0};
-    xTaskCreate(deadlock_2_threads, "FirstThread", MAIN_TASK_STACK_SIZE, (void *)&first_args, MAIN_TASK_PRIORITY, &first_T);
+    xTaskCreate(deadlock_2_threads, "FirstThread", MAIN_TASK_STACK_SIZE, (void *)&first_args, MAIN_TASK_PRIORITY, &first_t);
     xTaskCreate(deadlock_2_threads, "SecondThread", SIDE_TASK_STACK_SIZE, (void *)&second_args, SIDE_TASK_PRIORITY, &second_t);
     //Wait a little to make sure they are deadlocked
     vTaskDelay(100);
@@ -126,8 +126,8 @@ void test_deadlock_2_threads(void)
     vTaskSuspend(first_t);
     vTaskSuspend(second_t);
     //Check that neither task gave back its semaphore
-    result_first = xSemaphoreTake(first_sem, 0);
-    result_second = xSemaphoreTake(second_sem, 0);
+    int result_first = xSemaphoreTake(first_sem, 0);
+    int result_second = xSemaphoreTake(second_sem, 0);
     TEST_ASSERT_EQUAL_INT(result_first, pdFALSE);
     TEST_ASSERT_EQUAL_INT(result_second, pdFALSE);
 }
@@ -137,10 +137,10 @@ void rest_orphaned_lock(void)
     // create semaphore
     SemaphoreHandle_t sem = xSemaphoreCreateBinary();
     // Give the semaphore so it can run:
-    xSemaphoreGive(sem};
+    xSemaphoreGive(sem);
     TaskHandle_t task;
     struct deadlock_args args = {sem, NULL, 0};
-    xTaskCreate(orphaned_lock, "Orphan_thread", MAIN_TASK_STACK_SIZE, (void *)&args, MAIN_TASK_PRIORITY, &sem);
+    xTaskCreate(orphaned_lock, "Orphan_thread", MAIN_TASK_STACK_SIZE, (void *)&args, MAIN_TASK_PRIORITY, &task);
     //Wait a little to make sure it is deadlocked
     vTaskDelay(100);
     //suspend the task so we can check
@@ -148,7 +148,7 @@ void rest_orphaned_lock(void)
     // Check status and results of task
     int result = xSemaphoreTake(sem, 0);
     TEST_ASSERT_EQUAL_INT(result, pdFALSE);
-    TEST_ASSERT_EQUAL_INT(args.count, 2); // Check that the function did indeed deadlock on count==2
+    TEST_ASSERT_EQUAL_INT(args.counter, 2); // Check that the function did indeed deadlock on count==2
 }
 
 void runner_task(__unused void *args)
