@@ -107,29 +107,48 @@ void test_side_lock_and_logic(void)
 void test_deadlock_2_threads(void)
 {
     //Create semaphores
-    SemaphoreHandle_t first = xSemaphoreCreateBinary();
-    SemaphoreHandle_t second = xSemaphoreCreateBinary();
+    SemaphoreHandle_t first_sem = xSemaphoreCreateBinary();
+    SemaphoreHandle_t second_sem = xSemaphoreCreateBinary();
     //Give both threads their semaphores so each can run
-    xSemaphoreGive(first);
-    xSemaphoreGive(second);
+    xSemaphoreGive(first_sem);
+    xSemaphoreGive(second_sem);
     //Run both functions
     //deadlock_2_threads(first, second, 0);
     //deadlock_2_threads(second, first, 0);
-    TaskHandle_t first, second;
-    struct deadlock_args first_args = {first, second, 0};
-    struct deadlock_args second_args = {second, first, 0};
-    xTaskCreate(deadlock_2_threads, "FirstThread", MAIN_TASK_STACK_SIZE, (void *)&first_args, MAIN_TASK_PRIORITY, &first);
-    xTaskCreate(deadlock_2_threads, "SecondThread", SIDE_TASK_STACK_SIZE, (void *)&second_args, SIDE_TASK_PRIORITY, &second);
+    TaskHandle_t first_t, second_t;
+    struct deadlock_args first_args = {first_sem, second_sem, 0};
+    struct deadlock_args second_args = {second_sem, first_sem, 0};
+    xTaskCreate(deadlock_2_threads, "FirstThread", MAIN_TASK_STACK_SIZE, (void *)&first_args, MAIN_TASK_PRIORITY, &first_T);
+    xTaskCreate(deadlock_2_threads, "SecondThread", SIDE_TASK_STACK_SIZE, (void *)&second_args, SIDE_TASK_PRIORITY, &second_t);
     //Wait a little to make sure they are deadlocked
     vTaskDelay(100);
     //suspend the tasks so we can check them
-    vTaskSuspend(first);
-    vTaskSuspend(second);
+    vTaskSuspend(first_t);
+    vTaskSuspend(second_t);
     //Check that neither task gave back its semaphore
-    result_first = xSemaphoreTake(first, 0);
-    result_second = xSemaphoreTake(second, 0);
+    result_first = xSemaphoreTake(first_sem, 0);
+    result_second = xSemaphoreTake(second_sem, 0);
     TEST_ASSERT_EQUAL_INT(result_first, pdFALSE);
     TEST_ASSERT_EQUAL_INT(result_second, pdFALSE);
+}
+
+void rest_orphaned_lock(void)
+{
+    // create semaphore
+    SemaphoreHandle_t sem = xSemaphoreCreateBinary();
+    // Give the semaphore so it can run:
+    xSemaphoreGive(sem};
+    TaskHandle_t task;
+    struct deadlock_args args = {sem, NULL, 0};
+    xTaskCreate(orphaned_lock, "Orphan_thread", MAIN_TASK_STACK_SIZE, (void *)&args, MAIN_TASK_PRIORITY, &sem);
+    //Wait a little to make sure it is deadlocked
+    vTaskDelay(100);
+    //suspend the task so we can check
+    vTaskSuspend(task);
+    // Check status and results of task
+    int result = xSemaphoreTake(sem, 0);
+    TEST_ASSERT_EQUAL_INT(result, pdFALSE);
+    TEST_ASSERT_EQUAL_INT(args.count, 2); // Check that the function did indeed deadlock on count==2
 }
 
 void runner_task(__unused void *args)

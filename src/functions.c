@@ -46,6 +46,15 @@ void deadlock_2_threads(void* vanilla_args)
 
 void orphaned_lock(void* vanilla_args)
 {
-struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
-
+    struct deadlock_args *args = (struct deadlock_args *)vanilla_args;
+    args.counter++;
+    while (1) {
+        xSemaphoreTake(args.first, K_FOREVER);
+        args.counter++;
+        if (args.counter % 2) {
+            continue;
+        }
+        printk("Count %d\n", args.counter);
+        xSemaphoreGive(&args.first);
+    }
 }
